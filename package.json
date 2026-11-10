@@ -1,0 +1,51 @@
+{
+  "name": "autodoc-api",
+  "version": "0.1.0",
+  "description": "Zero-annotation OpenAPI documentation for existing Node.js / TypeScript / Express APIs.",
+  "license": "MIT",
+  "keywords": [
+    "openapi",
+    "openapi3",
+    "swagger",
+    "api-documentation",
+    "express",
+    "typescript",
+    "zod",
+    "static-analysis",
+    "documentation-generator",
+    "scalar",
+    "redoc"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "autodoc": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/analyze.test.js test/cli.test.js",
+    "example": "npm run build && node dist/cli.js ./example/src --out ./example/openapi.json",
+    "serve:example": "npm run build && node dist/cli.js serve ./example/src",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "typescript": ">=5.6.0 <7"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "express": "^4.21.0",
+    "zod": "^3.23.8"
+  }
+}

@@ -1,0 +1,10 @@
+export { analyzeProject } from './analyze';
+export type { AnalyzeOptions, AnalysisResult } from './analyze';
+export { generateOpenApi, validateOpenApi, toOpenApiPath } from './openapi';
+export { coverageReport, computeCoverage } from './coverage';
+export { docsHtml } from './ui';
+export { docs } from './docs';
+export type { ValidatorAdapter, ValidatorContext } from './validators/adapter';
+export { ZodAdapter } from './validators/zod';
+export type * from './model';
+export type { AutoDocConfig } from './project';
