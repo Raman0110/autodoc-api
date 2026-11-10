@@ -84,22 +84,24 @@ import express from 'express';
 import { autodocMiddleware } from 'autodoc-api';
 
 const app = express();
-app.use('/api/docs', autodocMiddleware());                    // analyzes ./src
+app.use(autodocMiddleware());     // docs at <your app>/docs  (analyzes ./src)
 // ...your routes
 ```
 
+Want a different URL? `autodocMiddleware({ path: '/api/docs' })`, or mount it yourself: `app.use('/api/docs', autodocMiddleware())`.
+
 | URL | |
 | --- | --- |
-| `/api/docs` | Scalar (or the `provider` option) |
-| `/api/docs/swagger` | Swagger UI |
-| `/api/docs/redoc` | ReDoc |
-| `/api/docs/openapi.json` | the OpenAPI document |
+| `/docs` | Scalar (or the `provider` option) |
+| `/docs/swagger` | Swagger UI |
+| `/docs/redoc` | ReDoc |
+| `/docs/openapi.json` | the OpenAPI document |
 
-Options: `dir` (default `./src`), `provider` (`scalar` \| `swagger` \| `redoc`), `title`, `enabled`, `live` (re-analyze on every request), `spec`, `specFile`, `tsconfig`, `config`.
+Options: `path` (default `/docs`), `dir` (default `./src`), `provider` (`scalar` \| `swagger` \| `redoc`), `title`, `enabled`, `live` (re-analyze on every request), `spec`, `specFile`, `tsconfig`, `config`.
 
 - The source is analyzed once, on the first request to the docs. This needs your `src/` TypeScript files at runtime.
 - **Production:** generate the spec at build time (`autodoc ./src --out openapi.json`) and use `autodocMiddleware({ specFile: './openapi.json' })`, or turn the docs off with `enabled: process.env.NODE_ENV !== 'production'`.
-- Mount it at a path. Mounted at `/` it does nothing, so it can never shadow your routes.
+- It only answers its own URLs (`/docs`, `/docs/swagger`, ...); every other request passes through to your routes.
 - If you use `helmet`, allow the CDN the UI loads from (`cdn.jsdelivr.net`) in your Content-Security-Policy for these routes.
 
 ## Programmatic use

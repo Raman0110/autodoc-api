@@ -64,3 +64,25 @@ test('middleware: provider option, enabled:false and specFile', async () => {
     server.close();
   }
 });
+
+test('middleware mounted without a path serves /docs by default and honours options.path', async () => {
+  const app = express();
+  app.get('/ping', (_req, res) => res.send('pong'));
+  app.use(autodocMiddleware({ dir: example }));
+  app.use(autodocMiddleware({ dir: example, path: 'internal/api-docs', provider: 'redoc' }));
+  const { server, port } = await start(app);
+  try {
+    const main = await get(port, '/docs');
+    assert.equal(main.status, 200);
+    assert.match(main.body, /data-url="\/docs\/openapi\.json"/);
+    assert.match((await get(port, '/docs/swagger')).body, /swagger-ui/);
+    assert.equal(JSON.parse((await get(port, '/docs/openapi.json')).body).openapi, '3.1.0');
+    const custom = await get(port, '/internal/api-docs');
+    assert.match(custom.body, /redoc/);
+    assert.match(custom.body, /\/internal\/api-docs\/openapi\.json/);
+    assert.equal((await get(port, '/ping')).body, 'pong');
+    assert.equal((await get(port, '/documents')).status, 404); // '/docs' must not prefix-match '/documents'
+  } finally {
+    server.close();
+  }
+});

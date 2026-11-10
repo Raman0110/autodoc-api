@@ -27,7 +27,13 @@ export interface DocsMiddlewareOptions {
   spec?: OpenApiDocument;
   /** Serve an openapi.json generated earlier (use in production where src/ is not deployed). */
   specFile?: string;
-  /** UI served at the mount path itself (default "scalar"). */
+  /**
+   * URL path the docs live at when the middleware is mounted without a path,
+   * i.e. `app.use(autodocMiddleware())` (default "/docs"). Ignored if you mount it
+   * at a path yourself: `app.use('/api/docs', autodocMiddleware())`.
+   */
+  path?: string;
+  /** UI served at the docs path itself (default "scalar"). */
   provider?: DocsProvider;
   title?: string;
   tsconfig?: string;
@@ -43,10 +49,11 @@ const PAGES: Record<string, DocsProvider> = { '/scalar': 'scalar', '/swagger': '
 /**
  * Express middleware that serves interactive API docs generated from your source.
  *
- *   app.use('/api/docs', autodocMiddleware());
- *   // /api/docs               Scalar (or `provider`)
- *   // /api/docs/swagger       Swagger UI     /api/docs/redoc   ReDoc
- *   // /api/docs/openapi.json  the OpenAPI document
+ *   app.use(autodocMiddleware());                  // docs at <your app>/docs
+ *   app.use('/api/docs', autodocMiddleware());     // or at any path you mount it
+ *   // /docs               Scalar (or `provider`)
+ *   // /docs/swagger       Swagger UI     /docs/redoc   ReDoc
+ *   // /docs/openapi.json  the OpenAPI document
  */
 export function autodocMiddleware(options: DocsMiddlewareOptions = {}) {
   let cache: { doc: OpenApiDocument; coverage?: number } | undefined;
@@ -69,11 +76,18 @@ export function autodocMiddleware(options: DocsMiddlewareOptions = {}) {
   return function autodocDocs(req: Req, res: Res, next: Next): void {
     if (options.enabled === false) return next();
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-    // Must be mounted at a path (app.use('/api/docs', ...)); mounted at "/" it would shadow your routes.
-    const base = (req.baseUrl ?? '').replace(/\/+$/, '');
-    if (!base) return next();
-
-    const sub = ((req.path ?? (req.url ?? '/').split('?')[0]).replace(/\/+$/, '') || '/') as string;
+    // Mounted at a path (app.use('/docs', mw)): Express gives us baseUrl + path.
+    // Mounted at the root (app.use(mw)): serve under options.path, default "/docs".
+    const rawPath = (req.path ?? (req.url ?? '/').split('?')[0]) as string;
+    let base = (req.baseUrl ?? '').replace(/\/+$/, '');
+    let rest = rawPath;
+    if (!base) {
+      base = ('/' + (options.path ?? '/docs').replace(/^\/+|\/+$/g, '')).replace(/\/+$/, '');
+      if (base === '') return next(); // path "/" would shadow the whole app
+      if (rawPath !== base && !rawPath.startsWith(base + '/')) return next();
+      rest = rawPath.slice(base.length);
+    }
+    const sub = (rest.replace(/\/+$/, '') || '/') as string;
     const known = sub === '/' || sub === '/openapi.json' || sub === '/coverage.json' || sub in PAGES;
     if (!known) return next();
 
