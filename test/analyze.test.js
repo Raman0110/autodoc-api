@@ -147,3 +147,21 @@ test('service fixture: body typed through the service call, cookie().json() chai
   assert.deepEqual(Object.keys(login.responses), ['200']);
   assert.equal(model.endpoints.find((e) => e.path === '/users/login').requestBody.source, 'typescript-call-argument');
 });
+
+test('inline fixture: schema.parse(req.body) inside the controller defines the body', () => {
+  const { doc } = run(path.join(root, 'test/fixtures/inline-parse'));
+  const create = op(doc, '/requests', 'post');
+  assert.equal(create.requestBody.content['application/json'].schema.$ref, '#/components/schemas/createRequestSchema');
+  const s = doc.components.schemas.createRequestSchema;
+  assert.deepEqual(s.required, ['title']);
+  assert.equal(s.properties.title.maxLength, 150);
+  assert.equal(s.properties.slug.default, '');
+  assert.equal(s.properties.slug.pattern, '^[a-z0-9-]*$');
+  assert.deepEqual(s.properties.expiresAt, { type: 'string', format: 'date-time' });
+  assert.ok(create.responses['201'] && create.responses['400']);
+  const pw = op(doc, '/requests/password', 'post');
+  assert.equal(pw.requestBody.content['application/json'].schema.$ref, '#/components/schemas/passwordSchema');
+  assert.deepEqual(doc.components.schemas.passwordSchema.required, ['slug', 'password']);
+  const del = op(doc, '/requests/{slug}', 'delete');
+  assert.ok(del.responses['204'] && del.responses['401']);
+});

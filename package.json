@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Zero-annotation OpenAPI documentation for existing Node.js / TypeScript / Express APIs.",
   "license": "MIT",
+  "author": "Raman Tamang <ramantamang556@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raman0110/autodoc-api.git"
+  },
+  "homepage": "https://github.com/Raman0110/autodoc-api#readme",
+  "bugs": {
+    "url": "https://github.com/Raman0110/autodoc-api/issues"
+  },
   "keywords": [
     "openapi",
     "openapi3",

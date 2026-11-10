@@ -197,7 +197,7 @@ export function analyzeEndpoint(route: DiscoveredRoute, ctx: AnalysisContext): A
 
   const responses: ApiResponse[] = [];
 
-  if (controller) analyzeController(controller, ctx, { upsert, setBody, responses, warn });
+  if (controller) analyzeController(controller, ctx, { upsert, setBody, responses, validators, warn });
 
   // validators override everything inferred from code
   const inlineObject = (s: ApiSchema): ApiSchema => {
@@ -382,6 +382,7 @@ interface Sink {
   upsert(p: ApiParameter): void;
   setBody(b: ApiRequestBody): void;
   responses: ApiResponse[];
+  validators: FoundValidator[];
   warn(m: string): void;
 }
 
@@ -691,7 +692,38 @@ function analyzeController(fn: FnNode, ctx: AnalysisContext, sink: Sink): void {
     }
     ts.forEachChild(node, collectAliases);
   };
+  const vctx: ValidatorContext = {
+    checker,
+    types,
+    components: ctx.components,
+    warn: (m, n) => ctx.warn(m, n),
+  };
+  const requestTarget = (e: ts.Expression): Target | undefined => {
+    e = unwrap(e);
+    if (!reqName) return undefined;
+    if (isReqMember(e, 'body')) return 'body';
+    if (isReqMember(e, 'query')) return 'query';
+    if (isReqMember(e, 'params')) return 'params';
+    if (isBodyExpr(e)) return 'body';
+    return undefined;
+  };
+  const PARSE_METHODS = new Set(['parse', 'parseAsync', 'safeParse', 'safeParseAsync', 'validate', 'validateAsync']);
   const followBody = (node: ts.Node): void => {
+    // schema.parse(req.body) / schema.safeParse(req.query) inside the controller
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      PARSE_METHODS.has(node.expression.name.text) &&
+      node.arguments[0]
+    ) {
+      const target = requestTarget(node.arguments[0]);
+      const recv = node.expression.expression;
+      const adapter = target ? ctx.adapters.find((a) => a.matches(recv, vctx)) : undefined;
+      if (target && adapter) {
+        const schema = adapter.toSchema(recv, vctx);
+        if (schema) sink.validators.push({ target, schema, adapter: adapter.name });
+      }
+    }
     if (ts.isCallExpression(node)) {
       node.arguments.forEach((arg, i) => {
         if (!isBodyExpr(arg)) return;

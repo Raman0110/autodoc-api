@@ -167,8 +167,14 @@ export class ZodAdapter implements ValidatorAdapter {
       // z.coerce.number() / z.iso.datetime()
       const ns = base.name.text;
       const [builder, ...rest] = calls;
-      node = this.builder(builder, ctx, depth);
-      if (ns === 'iso' && !node.schema.format && BASE_FORMATS[builder.name]) node.schema.format = BASE_FORMATS[builder.name];
+      if (ns === 'iso') {
+        // z.iso.datetime() / z.iso.date() / z.iso.time() / z.iso.duration()
+        const fmt: Record<string, string> = { datetime: 'date-time', date: 'date', time: 'time', duration: 'duration' };
+        node = { schema: { type: 'string', format: fmt[builder.name] }, optional: false };
+        if (!fmt[builder.name]) delete node.schema.format;
+      } else {
+        node = this.builder(builder, ctx, depth);
+      }
       modifiers = rest;
     } else {
       const inner = this.parse(base, ctx, depth + 1);
