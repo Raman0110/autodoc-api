@@ -1,6 +1,6 @@
 {
   "name": "autodoc-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Zero-annotation OpenAPI documentation for existing Node.js / TypeScript / Express APIs.",
   "license": "MIT",
   "author": "Raman Tamang <ramantamang556@gmail.com>",
