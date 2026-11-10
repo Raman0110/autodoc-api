@@ -8,3 +8,6 @@ export type { ValidatorAdapter, ValidatorContext } from './validators/adapter';
 export { ZodAdapter } from './validators/zod';
 export type * from './model';
 export type { AutoDocConfig } from './project';
+export { autodocMiddleware } from './middleware';
+export type { DocsMiddlewareOptions } from './middleware';
+export type { DocsProvider } from './ui';

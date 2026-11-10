@@ -43,7 +43,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test test/analyze.test.js test/cli.test.js",
+    "test": "npm run build && node --test test/analyze.test.js test/cli.test.js test/middleware.test.js",
     "example": "npm run build && node dist/cli.js ./example/src --out ./example/openapi.json",
     "serve:example": "npm run build && node dist/cli.js serve ./example/src",
     "prepublishOnly": "npm test"

@@ -11,7 +11,7 @@ npx autodoc serve ./src      # http://localhost:4000/docs  (Scalar by default)
 npx autodoc check ./src      # CI gate (exit 1 below --min-coverage or on an invalid spec)
 ```
 
-## What it understands (MVP)
+## What it understands
 
 | Source | What AutoDoc extracts |
 | --- | --- |
@@ -26,7 +26,6 @@ npx autodoc check ./src      # CI gate (exit 1 below --min-coverage or on an inv
 | Query / header inference | `req.query.page`, `const { q } = req.query`, `Number(req.query.x)`, `req.get('x-header')` (lower confidence) |
 | Auth | middleware names such as `authenticate`, `requireAuth`, `protect` (and `router.use(...)`) → `bearerAuth`, flagged *uncertain*; add exact names via config for *high* confidence |
 
-Plain `.js` files are analyzed too (with less type information).
 
 ## Confidence and coverage
 
@@ -77,6 +76,31 @@ router.post('/users', validate(CreateUserSchema),
 ```
 
 `docs.provider` is `scalar`, `swagger` or `redoc` (UI scripts load from a CDN).
+
+## Serve the docs from your own app (`/api/docs`)
+
+```ts
+import express from 'express';
+import { autodocMiddleware } from 'autodoc-api';
+
+const app = express();
+app.use('/api/docs', autodocMiddleware());                    // analyzes ./src
+// ...your routes
+```
+
+| URL | |
+| --- | --- |
+| `/api/docs` | Scalar (or the `provider` option) |
+| `/api/docs/swagger` | Swagger UI |
+| `/api/docs/redoc` | ReDoc |
+| `/api/docs/openapi.json` | the OpenAPI document |
+
+Options: `dir` (default `./src`), `provider` (`scalar` \| `swagger` \| `redoc`), `title`, `enabled`, `live` (re-analyze on every request), `spec`, `specFile`, `tsconfig`, `config`.
+
+- The source is analyzed once, on the first request to the docs. This needs your `src/` TypeScript files at runtime.
+- **Production:** generate the spec at build time (`autodoc ./src --out openapi.json`) and use `autodocMiddleware({ specFile: './openapi.json' })`, or turn the docs off with `enabled: process.env.NODE_ENV !== 'production'`.
+- Mount it at a path. Mounted at `/` it does nothing, so it can never shadow your routes.
+- If you use `helmet`, allow the CDN the UI loads from (`cdn.jsdelivr.net`) in your Content-Security-Policy for these routes.
 
 ## Programmatic use
 
