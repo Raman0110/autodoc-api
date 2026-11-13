@@ -35,8 +35,9 @@ interface RawRoute {
   handlers: ts.Expression[];
   node: ts.CallExpression;
 }
+type RouterKey = ts.Symbol | string;
 interface Mount {
-  child: ts.Symbol;
+  child: RouterKey;
   prefix: string;
   middleware: ts.Expression[];
 }
@@ -46,7 +47,7 @@ interface UseEntry {
   node: ts.CallExpression;
 }
 interface RouterInfo {
-  key: ts.Symbol;
+  key: RouterKey;
   routes: RawRoute[];
   mounts: Mount[];
   uses: UseEntry[];
@@ -61,11 +62,27 @@ export interface RouteDiscovery {
 export function discoverRoutes(project: Project): RouteDiscovery {
   const { checker } = project;
   const warnings: string[] = [];
-  const routers = new Map<ts.Symbol, RouterInfo>();
-  const childKeys = new Set<ts.Symbol>();
-  const keyCache = new Map<ts.Node, ts.Symbol | null>();
+  const routers = new Map<RouterKey, RouterInfo>();
+  const childKeys = new Set<RouterKey>();
+  const keyCache = new Map<ts.Node, RouterKey | null>();
+  const staticPropertyCache = new Map<string, string | null>();
+  type Bindings = Map<ts.Symbol, ts.ObjectLiteralExpression>;
 
-  const info = (key: ts.Symbol): RouterInfo => {
+  const boundExpression = (expr: ts.Expression, bindings?: Bindings): ts.Expression => {
+    expr = unwrap(expr);
+    if (!bindings || !ts.isPropertyAccessExpression(expr) || !ts.isIdentifier(expr.expression)) return expr;
+    const object = bindings.get(symbolOf(checker, expr.expression) as ts.Symbol);
+    if (!object) return expr;
+    const property = object.properties.find(
+      (p): p is ts.PropertyAssignment =>
+        ts.isPropertyAssignment(p) &&
+        ((ts.isIdentifier(p.name) && p.name.text === expr.name.text) ||
+          (ts.isStringLiteral(p.name) && p.name.text === expr.name.text)),
+    );
+    return property ? unwrap(property.initializer) : expr;
+  };
+
+  const info = (key: RouterKey): RouterInfo => {
     let i = routers.get(key);
     if (!i) routers.set(key, (i = { key, routes: [], mounts: [], uses: [] }));
     return i;
@@ -94,14 +111,33 @@ export function discoverRoutes(project: Project): RouteDiscovery {
     }
   };
 
-  const resolveRouterKey = (expr: ts.Expression, depth = 0): ts.Symbol | undefined => {
+  const enclosingClass = (node: ts.Node): ts.ClassLikeDeclaration | undefined => {
+    for (let current: ts.Node | undefined = node.parent; current; current = current.parent) {
+      if (ts.isClassLike(current)) return current;
+    }
+    return undefined;
+  };
+
+  const contextualThisKey = (expr: ts.Expression): string | undefined => {
+    if (!ts.isPropertyAccessExpression(expr) || expr.expression.kind !== ts.SyntaxKind.ThisKeyword) return undefined;
+    if (expr.name.text !== 'router') return undefined;
+    const owner = enclosingClass(expr);
+    if (!owner) return undefined;
+    const sf = owner.getSourceFile();
+    return `${sf.fileName}:${owner.pos}:this.router`;
+  };
+
+  const resolveRouterKey = (expr: ts.Expression, depth = 0, bindings?: Bindings): RouterKey | undefined => {
     if (depth > 6) return undefined;
-    expr = unwrap(expr);
+    expr = boundExpression(expr, bindings);
     const cached = keyCache.get(expr);
     if (cached !== undefined) return cached ?? undefined;
-    let result: ts.Symbol | undefined;
+    let result: RouterKey | undefined;
 
-    if (ts.isCallExpression(expr) && !isRouterInit(expr)) {
+    const contextual = contextualThisKey(expr);
+    if (contextual) result = contextual;
+
+    if (!result && ts.isCallExpression(expr) && !isRouterInit(expr)) {
       // factory: app.use('/users', createUserRouter())
       const fn = functionFromExpression(checker, expr.expression);
       if (fn?.body) {
@@ -114,11 +150,11 @@ export function discoverRoutes(project: Project): RouteDiscovery {
         visit(fn.body);
         if (ts.isExpression(fn.body)) returns.push(fn.body);
         for (const r of returns) {
-          result = resolveRouterKey(r, depth + 1);
+          result = resolveRouterKey(r, depth + 1, bindings);
           if (result) break;
         }
       }
-    } else if (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr)) {
+    } else if (!result && (ts.isIdentifier(expr) || ts.isPropertyAccessExpression(expr))) {
       let sym = symbolOf(checker, expr);
       for (let i = 0; sym && i < 6; i++) {
         const decl = declarationOf(sym);
@@ -137,10 +173,16 @@ export function discoverRoutes(project: Project): RouteDiscovery {
           decl && (ts.isVariableDeclaration(decl) || ts.isPropertyDeclaration(decl) || ts.isPropertyAssignment(decl))
             ? decl.initializer
             : undefined;
-        if (isRouterInit(init) || isRouterType(expr)) result = sym;
+        if (init) {
+          const inner = unwrap(init);
+          if (ts.isIdentifier(inner) || ts.isPropertyAccessExpression(inner) || ts.isCallExpression(inner)) {
+            result = resolveRouterKey(inner, depth + 1, bindings);
+          }
+        }
+        if (!result && (isRouterInit(init) || isRouterType(expr))) result = sym;
         break;
       }
-    } else if (isRouterInit(expr)) {
+    } else if (!result && isRouterInit(expr)) {
       // inline `app.use('/x', Router())` with no binding: not addressable
       result = undefined;
     }
@@ -148,7 +190,7 @@ export function discoverRoutes(project: Project): RouteDiscovery {
     return result;
   };
 
-  type Receiver = { key: ts.Symbol; basePath?: string };
+  type Receiver = { key: RouterKey; basePath?: string };
   const receiverOf = (expr: ts.Expression): Receiver | undefined => {
     expr = unwrap(expr);
     if (ts.isCallExpression(expr) && ts.isPropertyAccessExpression(expr.expression)) {
@@ -181,7 +223,105 @@ export function discoverRoutes(project: Project): RouteDiscovery {
     return out;
   };
 
-  const handleCall = (call: ts.CallExpression): void => {
+  const staticString = (expr: ts.Expression | undefined, bindings?: Bindings, depth = 0): string | undefined => {
+    if (!expr || depth > 8) return undefined;
+    expr = boundExpression(expr, bindings);
+    const direct = evalString(checker, expr);
+    if (direct !== undefined) return direct;
+    if (ts.isIdentifier(expr)) {
+      const decl = declarationOf(symbolOf(checker, expr));
+      if (decl && ts.isVariableDeclaration(decl)) return staticString(decl.initializer, bindings, depth + 1);
+    }
+    if (ts.isBinaryExpression(expr)) {
+      if (expr.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+        const left = staticString(expr.left, bindings, depth + 1);
+        const right = staticString(expr.right, bindings, depth + 1);
+        return left !== undefined && right !== undefined ? left + right : undefined;
+      }
+      if (expr.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+        return staticString(expr.right, bindings, depth + 1);
+      }
+    }
+    if (
+      ts.isCallExpression(expr) &&
+      ts.isPropertyAccessExpression(expr.expression) &&
+      expr.expression.name.text === 'replace'
+    ) {
+      const value = staticString(expr.expression.expression, bindings, depth + 1);
+      const search = staticString(expr.arguments[0], bindings, depth + 1);
+      const replacement = staticString(expr.arguments[1], bindings, depth + 1);
+      if (value !== undefined && search !== undefined && replacement !== undefined) {
+        return value.replace(search, replacement);
+      }
+    }
+    if (ts.isPropertyAccessExpression(expr)) {
+      const propertyName = expr.name.text;
+      const cached = staticPropertyCache.get(propertyName);
+      if (cached !== undefined) return cached ?? undefined;
+      staticPropertyCache.set(propertyName, null);
+      const values = new Set<string>();
+      for (const sf of project.sourceFiles) {
+        const visit = (node: ts.Node): void => {
+          if (
+            ts.isPropertyAssignment(node) &&
+            ((ts.isIdentifier(node.name) && node.name.text === propertyName) ||
+              (ts.isStringLiteral(node.name) && node.name.text === propertyName))
+          ) {
+            const value = staticString(node.initializer, bindings, depth + 1);
+            if (value !== undefined) values.add(value);
+          }
+          ts.forEachChild(node, visit);
+        };
+        ts.forEachChild(sf, visit);
+      }
+      const value = values.size === 1 ? [...values][0] : undefined;
+      staticPropertyCache.set(propertyName, value ?? null);
+      return value;
+    }
+    return undefined;
+  };
+
+  const mountPrefix = (expr: ts.Expression | undefined, bindings?: Bindings): string | undefined => {
+    const direct = evalString(checker, expr);
+    if (direct !== undefined || !expr) return direct;
+    const e = unwrap(expr);
+    if (!ts.isPropertyAccessExpression(e) || e.expression.kind !== ts.SyntaxKind.ThisKeyword) {
+      return staticString(expr, bindings);
+    }
+    const owner = enclosingClass(e);
+    if (!owner) return undefined;
+    const constructor = owner.members.find(ts.isConstructorDeclaration);
+    if (!constructor?.body) return undefined;
+
+    for (const statement of constructor.body.statements) {
+      if (ts.isExpressionStatement(statement) && ts.isBinaryExpression(statement.expression)) {
+        const assignment = statement.expression;
+        if (
+          assignment.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+          ts.isPropertyAccessExpression(assignment.left) &&
+          assignment.left.expression.kind === ts.SyntaxKind.ThisKeyword &&
+          assignment.left.name.text === e.name.text
+        ) {
+          const value = evalString(checker, assignment.right);
+          if (value !== undefined) return value;
+        }
+      }
+    }
+
+    // Base classes commonly assign `this.path = path`, while subclasses pass
+    // the concrete prefix through `super(app, '/v1/users', Controller)`.
+    for (const statement of constructor.body.statements) {
+      if (!ts.isExpressionStatement(statement) || !ts.isCallExpression(statement.expression)) continue;
+      if (statement.expression.expression.kind !== ts.SyntaxKind.SuperKeyword) continue;
+      for (const argument of statement.expression.arguments) {
+        const value = evalString(checker, argument);
+        if (value !== undefined && value.startsWith('/')) return value;
+      }
+    }
+    return staticString(expr, bindings);
+  };
+
+  const handleCall = (call: ts.CallExpression, bindings?: Bindings): void => {
     if (!ts.isPropertyAccessExpression(call.expression)) return;
     const name = call.expression.name.text;
     const isMethod = HTTP_METHODS.has(name);
@@ -213,7 +353,7 @@ export function discoverRoutes(project: Project): RouteDiscovery {
     // .use(...)
     let args = [...call.arguments];
     let prefix = '';
-    const first = args[0] ? evalString(checker, args[0]) : undefined;
+    const first = mountPrefix(args[0], bindings);
     if (first !== undefined) {
       prefix = first;
       args = args.slice(1);
@@ -221,7 +361,7 @@ export function discoverRoutes(project: Project): RouteDiscovery {
     const flat = flattenArgs(args);
     const middleware: ts.Expression[] = [];
     for (const a of flat) {
-      const child = resolveRouterKey(a);
+      const child = resolveRouterKey(a, 0, bindings);
       if (child && child !== recv.key) {
         r.mounts.push({ child, prefix, middleware: [...middleware] });
         childKeys.add(child);
@@ -231,7 +371,7 @@ export function discoverRoutes(project: Project): RouteDiscovery {
       }
     }
     // Middleware that was not followed by a router applies to later routes on this router
-    if (middleware.length && !flat.some((a) => resolveRouterKey(a))) {
+    if (middleware.length && !flat.some((a) => resolveRouterKey(a, 0, bindings))) {
       r.uses.push({ prefix, middleware, node: call });
     }
   };
@@ -240,13 +380,44 @@ export function discoverRoutes(project: Project): RouteDiscovery {
   for (const sf of project.sourceFiles) {
     const before = routers.size;
     let found = false;
-    const visit = (n: ts.Node): void => {
+    const visit = (n: ts.Node, bindings?: Bindings): void => {
       if (ts.isCallExpression(n)) {
+        if (
+          ts.isPropertyAccessExpression(n.expression) &&
+          n.expression.name.text === 'forEach' &&
+          n.arguments[0] &&
+          (ts.isArrowFunction(n.arguments[0]) || ts.isFunctionExpression(n.arguments[0]))
+        ) {
+          const collection = unwrap(n.expression.expression);
+          const decl =
+            ts.isIdentifier(collection) ? declarationOf(symbolOf(checker, collection)) : undefined;
+          const array =
+            decl && ts.isVariableDeclaration(decl) && decl.initializer && ts.isArrayLiteralExpression(unwrap(decl.initializer))
+              ? (unwrap(decl.initializer) as ts.ArrayLiteralExpression)
+              : ts.isArrayLiteralExpression(collection)
+                ? collection
+                : undefined;
+          const callback = n.arguments[0];
+          const parameter = callback.parameters[0];
+          const parameterSymbol = parameter && ts.isIdentifier(parameter.name)
+            ? symbolOf(checker, parameter.name)
+            : undefined;
+          if (array && parameterSymbol) {
+            for (const element of array.elements) {
+              const value = unwrap(element);
+              if (!ts.isObjectLiteralExpression(value)) continue;
+              const next = new Map(bindings);
+              next.set(parameterSymbol, value);
+              visit(callback.body, next);
+            }
+            return;
+          }
+        }
         const beforeRoutes = totalRoutes();
-        handleCall(n);
+        handleCall(n, bindings);
         if (totalRoutes() > beforeRoutes) found = true;
       }
-      ts.forEachChild(n, visit);
+      ts.forEachChild(n, (child) => visit(child, bindings));
     };
     ts.forEachChild(sf, visit);
     if (found || routers.size > before) routeFiles.add(sf.fileName);
@@ -267,7 +438,7 @@ export function discoverRoutes(project: Project): RouteDiscovery {
     return b === a || b.startsWith(a + '/');
   };
 
-  const emit = (key: ts.Symbol, prefix: string, inherited: ts.Expression[], stack: Set<ts.Symbol>): void => {
+  const emit = (key: RouterKey, prefix: string, inherited: ts.Expression[], stack: Set<RouterKey>): void => {
     if (stack.has(key)) return;
     stack.add(key);
     const r = routers.get(key);

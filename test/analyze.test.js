@@ -112,6 +112,20 @@ test('edge fixture: factory routers, router.use auth, wrappers, class controller
   assert.ok(op(doc, '/v1/orders/{orderId}', 'delete').responses['204']);
 });
 
+test('solution configs, path aliases, default exports and named router aliases preserve mount paths', () => {
+  const { model, project } = analyzeProject(path.join(root, 'test/fixtures/solution-config/src'));
+  assert.match(project.tsconfigPath, /tsconfig\.app\.json$/);
+  assert.deepEqual(model.endpoints.map((e) => `${e.method} ${e.path}`), ['get /api/users/:id']);
+});
+
+test('route tables, static config defaults and class-based routers preserve mount paths', () => {
+  const { model } = run(path.join(root, 'test/fixtures/route-patterns'));
+  assert.deepEqual(model.endpoints.map((e) => `${e.method} ${e.path}`).sort(), [
+    'get /admin/health',
+    'get /api/users/:id',
+  ]);
+});
+
 test('edge fixture: untyped handlers infer query, header and body fields with lower confidence', () => {
   const { doc, model } = edge();
   const s = op(doc, '/legacy/search', 'get');

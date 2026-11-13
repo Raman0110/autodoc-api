@@ -38,3 +38,18 @@ runs per project and reports the median.
 The current benchmark measures route discovery. Schema accuracy requires a
 separate property/status ground-truth dataset and must not be inferred from
 AutoDoc's own coverage score.
+
+## Large-project scale suite
+
+The compatibility projects are intentionally small enough to audit completely.
+For scanner behavior on substantially larger applications, run:
+
+```bash
+npm run benchmark:scale:setup
+npm run benchmark:scale
+```
+
+This separate suite pins Directus, Unleash, and Etherpad commits and reports
+cold-process runtime, peak memory, and detected routes. It only makes accuracy
+claims for routes manually recorded in `scale-projects.json`; a detected count
+is never treated as ground truth.

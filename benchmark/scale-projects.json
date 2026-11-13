@@ -1,0 +1,51 @@
+[
+  {
+    "name": "directus",
+    "repository": "https://github.com/directus/directus.git",
+    "commit": "3ba2201be9a783cffdc9de0b970a075ff199607f",
+    "sourceDirectory": "api/src",
+    "sparsePaths": ["api/src", "api/package.json", "api/tsconfig.json", "package.json", "tsconfig.json"],
+    "profile": "Large TypeScript/Express API",
+    "productionSourceFiles": 844,
+    "knownRouteDeclarations": 264,
+    "declarationPolicy": "Direct router.get/post/put/patch/delete calls outside tests",
+    "sampleRoutes": [
+      "GET /server/health", "GET /server/info", "GET /collections",
+      "GET /collections/:collection", "POST /collections", "PATCH /collections/:collection",
+      "DELETE /collections/:collection", "GET /items/:collection", "GET /items/:collection/:pk",
+      "POST /items/:collection", "PATCH /items/:collection/:pk", "DELETE /items/:collection/:pk",
+      "POST /auth/login", "POST /auth/logout", "POST /auth/refresh",
+      "POST /auth/password/request", "GET /files", "POST /files/import",
+      "GET /users/me", "PATCH /users/me", "POST /users/invite", "GET /roles/me",
+      "GET /permissions/me", "GET /schema/snapshot", "POST /schema/apply",
+      "GET /server/specs/oas",
+      "GET /flows/trigger/:pk([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+      "POST /flows/trigger/:pk([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+      "GET /utils/random/string", "GET /robots.txt"
+    ]
+  },
+  {
+    "name": "unleash",
+    "repository": "https://github.com/Unleash/unleash.git",
+    "commit": "52b6148ca5413913487e002f5f8e4b89dda197ce",
+    "sourceDirectory": "src",
+    "sparsePaths": ["src", "package.json", "tsconfig.json"],
+    "profile": "Large TypeScript/Express API with a custom route wrapper",
+    "productionSourceFiles": 1414,
+    "knownRouteDeclarations": 223,
+    "declarationPolicy": "this.route({...}) calls outside tests",
+    "sampleRoutes": []
+  },
+  {
+    "name": "etherpad",
+    "repository": "https://github.com/ether/etherpad-lite.git",
+    "commit": "1fbdc04caef9d396188c5e9b1a32471b0cd1713e",
+    "sourceDirectory": "src",
+    "sparsePaths": ["src", "package.json", "tsconfig.json"],
+    "profile": "Large TypeScript/JavaScript application with dynamic API registration",
+    "productionSourceFiles": 410,
+    "knownRouteDeclarations": null,
+    "declarationPolicy": "No complete ground truth; dynamic registrations are excluded from accuracy claims",
+    "sampleRoutes": []
+  }
+]

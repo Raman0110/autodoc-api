@@ -95,7 +95,7 @@ export function createProject(
   else walk(root, config.exclude ?? [], files);
   if (files.length === 0) throw new Error(`No source files found under ${root}`);
 
-  const tsconfigPath = opts.tsconfig
+  let tsconfigPath = opts.tsconfig
     ? path.resolve(opts.tsconfig)
     : findUp(fs.statSync(root).isFile() ? path.dirname(root) : root, ['tsconfig.json'], true);
 
@@ -108,13 +108,43 @@ export function createProject(
   };
   let rootNames = files;
   if (tsconfigPath) {
-    const cfg = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
+    let effectiveConfigPath = tsconfigPath;
+    let cfg = ts.readConfigFile(effectiveConfigPath, ts.sys.readFile);
+    // A solution-style config often contains only `references`. Pick the
+    // referenced project that owns the scanned source files so path aliases
+    // and module resolution work exactly as they do in the application.
+    if (!cfg.error && Array.isArray(cfg.config.references) && cfg.config.references.length) {
+      const wantedFiles = new Set(files.map((f) => path.normalize(f).toLowerCase()));
+      let best: { path: string; parsed: ts.ParsedCommandLine; overlap: number } | undefined;
+      for (const reference of cfg.config.references as Array<{ path?: string }>) {
+        if (!reference.path) continue;
+        let referencePath = path.resolve(path.dirname(tsconfigPath), reference.path);
+        if (fs.existsSync(referencePath) && fs.statSync(referencePath).isDirectory()) {
+          referencePath = path.join(referencePath, 'tsconfig.json');
+        } else if (!path.extname(referencePath)) {
+          referencePath += '.json';
+        }
+        const referenceConfig = ts.readConfigFile(referencePath, ts.sys.readFile);
+        if (referenceConfig.error) continue;
+        const parsed = ts.parseJsonConfigFileContent(referenceConfig.config, ts.sys, path.dirname(referencePath));
+        const overlap = parsed.fileNames.reduce(
+          (count, file) => count + (wantedFiles.has(path.normalize(file).toLowerCase()) ? 1 : 0),
+          0,
+        );
+        if (overlap > (best?.overlap ?? 0)) best = { path: referencePath, parsed, overlap };
+      }
+      if (best) {
+        effectiveConfigPath = best.path;
+        cfg = ts.readConfigFile(effectiveConfigPath, ts.sys.readFile);
+      }
+    }
     if (cfg.error) {
-      warnings.push(`Could not read ${tsconfigPath}: ${ts.flattenDiagnosticMessageText(cfg.error.messageText, '\n')}`);
+      warnings.push(`Could not read ${effectiveConfigPath}: ${ts.flattenDiagnosticMessageText(cfg.error.messageText, '\n')}`);
     } else {
-      const parsed = ts.parseJsonConfigFileContent(cfg.config, ts.sys, path.dirname(tsconfigPath));
+      const parsed = ts.parseJsonConfigFileContent(cfg.config, ts.sys, path.dirname(effectiveConfigPath));
       options = parsed.options;
       rootNames = Array.from(new Set([...files, ...parsed.fileNames]));
+      tsconfigPath = effectiveConfigPath;
     }
   }
   options = {

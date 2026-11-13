@@ -4,11 +4,11 @@ This benchmark measures route discovery accuracy on five independent public
 Express/TypeScript repositories. Ground truth was manually established from
 route declarations and every router mount before AutoDoc results were compared.
 
-AutoDoc version: **0.3.1**  
-Verified routes: **74**  
-Aggregate recall: **25.7%**  
-Aggregate precision: **25.7%**  
-High-confidence precision: **0%**
+AutoDoc version: **0.3.1**
+Verified routes: **74**
+Aggregate recall: **100%**
+Aggregate precision: **100%**
+High-confidence precision: **100%**
 
 ## Scope limitation
 
@@ -22,11 +22,11 @@ separate suite rather than inferred from this table.
 
 | Project | Actual | Detected | Correct | Recall | Precision | High-confidence precision | AutoDoc coverage | Median |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| dahkenangnon-mongoose | 24 | 24 | 0 | 0% | 0% | 0% | 81% | 1033 ms |
-| diego-express | 7 | 7 | 0 | 0% | 0% | — | 50% | 507 ms |
-| samved-prisma | 6 | 6 | 0 | 0% | 0% | — | 87% | 670 ms |
-| thailoc-express | 19 | 19 | 19 | 100% | 100% | — | 61% | 1017 ms |
-| vincent-prisma | 18 | 18 | 0 | 0% | 0% | 0% | 67% | 547 ms |
+| dahkenangnon-mongoose | 24 | 24 | 24 | 100% | 100% | 100% | 81% | 1049 ms |
+| diego-express | 7 | 7 | 7 | 100% | 100% | N/A | 100% | 496 ms |
+| samved-prisma | 6 | 6 | 6 | 100% | 100% | N/A | 92% | 647 ms |
+| thailoc-express | 19 | 19 | 19 | 100% | 100% | N/A | 61% | 1001 ms |
+| vincent-prisma | 18 | 18 | 18 | 100% | 100% | 100% | 67% | 515 ms |
 
 AutoDoc coverage is shown only for comparison. It is an internal completeness
 score and is not used as an accuracy metric.
@@ -52,13 +52,12 @@ node benchmark/setup.js
 node benchmark/run.js
 ```
 
-## Observed failure pattern
+## Observed outcome
 
-Literal nested mounts work well, but class-based, named-export, path-alias and
-configuration-driven router mounts often lose their prefixes. AutoDoc may find
-the underlying route call while reporting an incorrect root-level path. This is
-why the benchmark's external accuracy can be much lower than AutoDoc's internal
-coverage score.
+All 74 method/path pairs in this pinned compatibility corpus are currently
+resolved correctly. This result covers the recorded patterns, not every Express
+metaprogramming technique; the separate scale suite records known unsupported
+patterns rather than extrapolating from this score.
 
 ## Per-project differences
 
@@ -66,99 +65,31 @@ coverage score.
 
 Missed routes:
 
-  - DELETE /v1/messages/:id
-  - DELETE /v1/messages/many
-  - DELETE /v1/users/:id
-  - DELETE /v1/users/many
-  - GET /v1/messages
-  - GET /v1/messages/:id
-  - GET /v1/users
-  - GET /v1/users/:id
-  - PATCH /v1/messages/:id
-  - PATCH /v1/messages/many
-  - PATCH /v1/users/:id
-  - PATCH /v1/users/many
-  - POST /v1/auth/blacklist-token
-  - POST /v1/auth/forgot-password
-  - POST /v1/auth/login
-  - POST /v1/auth/logout
-  - POST /v1/auth/refresh-tokens
-  - POST /v1/auth/register
-  - POST /v1/auth/reset-password
-  - POST /v1/auth/verify-email
-  - POST /v1/messages
-  - POST /v1/messages/many
-  - POST /v1/users
-  - POST /v1/users/many
+  - None
 
 Incorrectly rooted or extra routes:
 
-  - DELETE /:id
-  - DELETE /:id
-  - DELETE /many
-  - DELETE /many
-  - GET /
-  - GET /
-  - GET /:id
-  - GET /:id
-  - PATCH /:id
-  - PATCH /:id
-  - PATCH /many
-  - PATCH /many
-  - POST /
-  - POST /
-  - POST /blacklist-token
-  - POST /forgot-password
-  - POST /login
-  - POST /logout
-  - POST /many
-  - POST /many
-  - POST /refresh-tokens
-  - POST /register
-  - POST /reset-password
-  - POST /verify-email
+  - None
 
 ### diego-express
 
 Missed routes:
 
-  - DELETE /api/v1/notes/:id
-  - GET /api/v1/health/live
-  - GET /api/v1/health/ready
-  - GET /api/v1/notes
-  - GET /api/v1/notes/:id
-  - POST /api/v1/notes
-  - PUT /api/v1/notes/:id
+  - None
 
 Incorrectly rooted or extra routes:
 
-  - DELETE /:id
-  - GET /
-  - GET /:id
-  - GET /live
-  - GET /ready
-  - POST /
-  - PUT /:id
+  - None
 
 ### samved-prisma
 
 Missed routes:
 
-  - GET /users/all
-  - GET /users/test
-  - POST /auth/login
-  - POST /auth/logout
-  - POST /auth/refresh
-  - POST /auth/register
+  - None
 
 Incorrectly rooted or extra routes:
 
-  - GET /all
-  - GET /test
-  - POST /login
-  - POST /logout
-  - POST /refresh
-  - POST /register
+  - None
 
 ### thailoc-express
 
@@ -174,42 +105,8 @@ Incorrectly rooted or extra routes:
 
 Missed routes:
 
-  - DELETE /api/client/user/me
-  - GET /api
-  - GET /api/admin/users
-  - GET /api/client/auth/logout
-  - GET /api/client/auth/register/confirmation
-  - GET /api/client/user/me
-  - GET /api/docs
-  - GET /api/info
-  - GET /api/logs
-  - GET /api/templates/email/email-verify
-  - GET /api/templates/email/password-request
-  - GET /api/templates/email/password-reseted
-  - GET /api/templates/email/welcome-user
-  - PATCH /api/client/user/me
-  - POST /api/client/auth/forgotpassword/request
-  - POST /api/client/auth/forgotpassword/reset
-  - POST /api/client/auth/login
-  - POST /api/client/auth/register
+  - None
 
 Incorrectly rooted or extra routes:
 
-  - DELETE /
-  - GET /
-  - GET /
-  - GET /
-  - GET /
-  - GET /
-  - GET /
-  - GET /email-verify
-  - GET /logout
-  - GET /password-request
-  - GET /password-reseted
-  - GET /register/confirmation
-  - GET /welcome-user
-  - PATCH /
-  - POST /forgotpassword/request
-  - POST /forgotpassword/reset
-  - POST /login
-  - POST /register
+  - None

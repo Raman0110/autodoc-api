@@ -3,6 +3,22 @@
 All notable changes to AutoDoc are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- Reproducible compatibility and large-project benchmark suites with pinned
+  public repositories, route samples, runtime, and peak-memory reporting.
+- Regression coverage for solution-style TypeScript configs, router aliases,
+  class-based routers, route tables, and configuration-derived mount paths.
+
+### Fixed
+
+- Preserve full mounted paths across default and named router exports.
+- Resolve the referenced application config in solution-style TypeScript
+  projects.
+- Resolve class-based and table-driven Express router mounts.
+
 ## [0.3.1] - 2026-11-13
 
 ### Fixed

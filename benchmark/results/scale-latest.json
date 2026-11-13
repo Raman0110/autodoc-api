@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-11-13T09:08:10.475Z",
+  "autodocVersion": "0.3.1",
+  "environment": {
+    "node": "v22.12.0",
+    "platform": "win32 10.0.26300",
+    "architecture": "x64",
+    "runsPerProject": 1
+  },
+  "policy": "Performance uses complete source trees. Accuracy is claimed only for manually recorded samples.",
+  "projects": [
+    {
+      "name": "directus",
+      "repository": "https://github.com/directus/directus.git",
+      "commit": "3ba2201be9a783cffdc9de0b970a075ff199607f",
+      "profile": "Large TypeScript/Express API",
+      "declarationPolicy": "Direct router.get/post/put/patch/delete calls outside tests",
+      "sourceFiles": 844,
+      "knownRouteDeclarations": 264,
+      "detectedRoutes": 272,
+      "sampleSize": 30,
+      "sampleCorrect": 30,
+      "sampleMisses": [],
+      "warnings": 5,
+      "medianMs": 3252,
+      "peakRssMb": 424,
+      "timingsMs": [
+        3252
+      ]
+    },
+    {
+      "name": "unleash",
+      "repository": "https://github.com/Unleash/unleash.git",
+      "commit": "52b6148ca5413913487e002f5f8e4b89dda197ce",
+      "profile": "Large TypeScript/Express API with a custom route wrapper",
+      "declarationPolicy": "this.route({...}) calls outside tests",
+      "sourceFiles": 1414,
+      "knownRouteDeclarations": 223,
+      "detectedRoutes": 0,
+      "sampleSize": 0,
+      "sampleCorrect": 0,
+      "sampleMisses": [],
+      "warnings": 6,
+      "medianMs": 2899,
+      "peakRssMb": 371,
+      "timingsMs": [
+        2899
+      ]
+    },
+    {
+      "name": "etherpad",
+      "repository": "https://github.com/ether/etherpad-lite.git",
+      "commit": "1fbdc04caef9d396188c5e9b1a32471b0cd1713e",
+      "profile": "Large TypeScript/JavaScript application with dynamic API registration",
+      "declarationPolicy": "No complete ground truth; dynamic registrations are excluded from accuracy claims",
+      "sourceFiles": 410,
+      "knownRouteDeclarations": null,
+      "detectedRoutes": 29,
+      "sampleSize": 0,
+      "sampleCorrect": 0,
+      "sampleMisses": [],
+      "warnings": 3,
+      "medianMs": 4068,
+      "peakRssMb": 561,
+      "timingsMs": [
+        4068
+      ]
+    }
+  ]
+}

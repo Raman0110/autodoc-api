@@ -50,6 +50,8 @@
     "serve:example": "npm run build && node dist/cli.js serve ./example/src",
     "benchmark": "npm run build && node benchmark/run.js",
     "benchmark:setup": "node benchmark/setup.js",
+    "benchmark:scale": "npm run build && node benchmark/scale.js",
+    "benchmark:scale:setup": "node benchmark/scale-setup.js",
     "prepublishOnly": "npm test"
   },
   "dependencies": {
