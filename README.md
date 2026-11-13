@@ -6,7 +6,7 @@
 
 **Zero-annotation OpenAPI 3.1 docs for existing Express + TypeScript APIs.**
 
-![AutoDoc CLI generating and checking an API contract](docs/demo.gif)
+![AutoDoc CLI generating and checking an API contract](https://raw.githubusercontent.com/Raman0110/autodoc-api/main/docs/demo.gif)
 
 autodoc-api reads the code you already wrote (routes, controllers, TypeScript types, Zod schemas, middleware) and generates an `openapi.json` plus interactive docs (Scalar, Swagger UI, ReDoc). No decorators, no Swagger comments, no duplicated schemas.
 
