@@ -1,0 +1,160 @@
+[
+  {
+    "name": "dahkenangnon-mongoose",
+    "repository": "https://github.com/Dahkenangnon/typescript-express-mongoose-api-boilerplate.git",
+    "commit": "3daf3ecf91502853db170141a2e1122a5689a416",
+    "sourceDirectory": "src",
+    "install": ["install", "--ignore-scripts", "--no-audit", "--no-fund"],
+    "profile": "Express 4, TypeScript, class-based routers",
+    "groundTruthFiles": [
+      "src/features/auth/routes/index.ts",
+      "src/features/user/routes/index.ts",
+      "src/features/message/routes/index.ts",
+      "src/abstracts/route.base.ts"
+    ],
+    "routes": [
+      "POST /v1/auth/register",
+      "POST /v1/auth/login",
+      "POST /v1/auth/logout",
+      "POST /v1/auth/refresh-tokens",
+      "POST /v1/auth/forgot-password",
+      "POST /v1/auth/reset-password",
+      "POST /v1/auth/verify-email",
+      "POST /v1/auth/blacklist-token",
+      "GET /v1/users",
+      "GET /v1/users/:id",
+      "POST /v1/users",
+      "PATCH /v1/users/:id",
+      "DELETE /v1/users/:id",
+      "POST /v1/users/many",
+      "DELETE /v1/users/many",
+      "PATCH /v1/users/many",
+      "GET /v1/messages",
+      "GET /v1/messages/:id",
+      "POST /v1/messages",
+      "PATCH /v1/messages/:id",
+      "DELETE /v1/messages/:id",
+      "POST /v1/messages/many",
+      "DELETE /v1/messages/many",
+      "PATCH /v1/messages/many"
+    ]
+  },
+  {
+    "name": "diego-express",
+    "repository": "https://github.com/DiegoLibonati/node-express-boilerplate.git",
+    "commit": "df7235e571cc60bd6546fdae2b225cd22c4c2a59",
+    "sourceDirectory": "src",
+    "install": ["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--force"],
+    "profile": "Express 4, TypeScript, Zod 4, path aliases",
+    "groundTruthFiles": [
+      "src/app.ts",
+      "src/routes/index.ts",
+      "src/routes/v1/note.route.ts",
+      "src/routes/v1/health.route.ts"
+    ],
+    "routes": [
+      "GET /api/v1/notes",
+      "GET /api/v1/notes/:id",
+      "POST /api/v1/notes",
+      "PUT /api/v1/notes/:id",
+      "DELETE /api/v1/notes/:id",
+      "GET /api/v1/health/live",
+      "GET /api/v1/health/ready"
+    ]
+  },
+  {
+    "name": "samved-prisma",
+    "repository": "https://github.com/samvedvajpeyi2/express-ts-pg-prisma-boilerplate.git",
+    "commit": "f864e3da52c209d722ad2c9e34b82ac2e045bddb",
+    "sourceDirectory": "src",
+    "install": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+    "profile": "Express 5, TypeScript ESM, Zod 4, named router exports",
+    "groundTruthFiles": [
+      "src/server.ts",
+      "src/features/user/routes/user.routes.ts",
+      "src/features/auth/routes/auth.routes.ts"
+    ],
+    "routes": [
+      "GET /users/all",
+      "GET /users/test",
+      "POST /auth/register",
+      "POST /auth/login",
+      "POST /auth/refresh",
+      "POST /auth/logout"
+    ]
+  },
+  {
+    "name": "thailoc-express",
+    "repository": "https://github.com/thailoc-dev/express-typescript-boilerplate.git",
+    "commit": "6d05d4304dc0a01105a3d00215c0fb7ad4269246",
+    "sourceDirectory": "src",
+    "install": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+    "profile": "Express 5, TypeScript, Zod 4, literal nested mounts",
+    "groundTruthFiles": [
+      "src/app.ts",
+      "src/api/index.ts",
+      "src/api/auth/index.ts",
+      "src/api/examples/index.ts",
+      "src/api/health/index.ts",
+      "src/api/users/index.ts"
+    ],
+    "routes": [
+      "GET /",
+      "GET /health",
+      "GET /api/v1/csrf-token",
+      "POST /api/v1/auth/login",
+      "POST /api/v1/auth/forgot-password",
+      "POST /api/v1/auth/reset-password",
+      "POST /api/v1/auth/refresh-token",
+      "POST /api/v1/auth/logout",
+      "GET /api/v1/examples",
+      "GET /api/v1/examples/:id",
+      "POST /api/v1/examples",
+      "PUT /api/v1/examples/:id",
+      "DELETE /api/v1/examples/:id",
+      "GET /api/v1/users",
+      "GET /api/v1/users/:id",
+      "POST /api/v1/users",
+      "PUT /api/v1/users/:id",
+      "DELETE /api/v1/users/:id",
+      "GET /api/v1/health"
+    ]
+  },
+  {
+    "name": "vincent-prisma",
+    "repository": "https://github.com/vincent-queimado/express-prisma-ts-boilerplate.git",
+    "commit": "597156baa60be5e46ad625c559dc8263800d45b5",
+    "sourceDirectory": "src",
+    "install": ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+    "profile": "Express 4, TypeScript, Zod 3, configuration-driven mounts",
+    "groundTruthFiles": [
+      "src/server/app.ts",
+      "src/routes/index.ts",
+      "src/routes/client/v1/index.ts",
+      "src/routes/client/v1/user_auth_route.ts",
+      "src/routes/client/v1/user_me_route.ts",
+      "src/routes/admin/v1/index.ts",
+      "src/routes/admin/v1/users_route.ts"
+    ],
+    "routes": [
+      "GET /api",
+      "GET /api/info",
+      "GET /api/logs",
+      "GET /api/docs",
+      "GET /api/templates/email/welcome-user",
+      "GET /api/templates/email/email-verify",
+      "GET /api/templates/email/password-request",
+      "GET /api/templates/email/password-reseted",
+      "POST /api/client/auth/register",
+      "GET /api/client/auth/register/confirmation",
+      "POST /api/client/auth/login",
+      "GET /api/client/auth/logout",
+      "POST /api/client/auth/forgotpassword/request",
+      "POST /api/client/auth/forgotpassword/reset",
+      "GET /api/client/user/me",
+      "PATCH /api/client/user/me",
+      "DELETE /api/client/user/me",
+      "GET /api/admin/users"
+    ]
+  }
+]

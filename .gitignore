@@ -7,3 +7,7 @@ dist/
 /openapi.json
 example/openapi.json
 example/openapi.yaml
+
+# external projects used by the reproducible benchmark harness
+/benchmark/workspaces/
+/benchmark/generated/
