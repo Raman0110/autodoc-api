@@ -2,8 +2,11 @@
 
 [![npm](https://img.shields.io/npm/v/autodoc-api.svg)](https://www.npmjs.com/package/autodoc-api)
 [![license](https://img.shields.io/npm/l/autodoc-api.svg)](LICENSE)
+[![CI](https://github.com/Raman0110/autodoc-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Raman0110/autodoc-api/actions/workflows/ci.yml)
 
 **Zero-annotation OpenAPI 3.1 docs for existing Express + TypeScript APIs.**
+
+![AutoDoc CLI generating and checking an API contract](docs/demo.gif)
 
 autodoc-api reads the code you already wrote (routes, controllers, TypeScript types, Zod schemas, middleware) and generates an `openapi.json` plus interactive docs (Scalar, Swagger UI, ReDoc). No decorators, no Swagger comments, no duplicated schemas.
 
@@ -59,6 +62,7 @@ npx autodoc check ./src          # CI: exit 1 if coverage is too low or the spec
 | Flag | Description |
 | --- | --- |
 | `--out <file>` | Output file (default `./openapi.json`) |
+| `--format <name>` | Output `json` or `yaml`; also inferred from `.yaml`/`.yml` filenames |
 | `--port <n>` | Port for `serve` (default 4000) |
 | `--provider <name>` | `scalar` (default), `swagger` or `redoc` |
 | `--tsconfig <file>` | Use a specific `tsconfig.json` |
@@ -76,6 +80,16 @@ Handy `package.json` scripts:
   }
 }
 ```
+
+Generate YAML either by filename or explicitly:
+
+```bash
+npx autodoc ./src --out openapi.yaml
+npx autodoc ./src --format yaml
+```
+
+The development server and middleware expose both `/openapi.json` and
+`/openapi.yaml`.
 
 ## Middleware options
 
@@ -264,9 +278,11 @@ Keep scripts like this outside `./src`, so they are not scanned or shipped in yo
 - Zod is the only supported validation library so far. Joi, Valibot, Yup, TypeBox and express-validator are not detected.
 - Static analysis: routes registered dynamically, response helpers, and values typed `any` can't be resolved.
 - Authentication is inferred from middleware names only.
-- The built-in spec validation checks structure and `$ref`s, not the full OpenAPI schema.
+- Generated documents are validated against the official OpenAPI 3.1 JSON Schema, followed by semantic checks for references, operation IDs, parameters and security schemes.
 
 ## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and pull-request guidance. Please report suspected vulnerabilities according to [SECURITY.md](SECURITY.md).
 
 ```bash
 git clone https://github.com/Raman0110/autodoc-api.git

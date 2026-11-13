@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { analyzeProject } from './analyze';
 import { coverageReport } from './coverage';
-import { generateOpenApi, type OpenApiDocument } from './openapi';
+import { generateOpenApi, serializeOpenApi, type OpenApiDocument } from './openapi';
 import type { AutoDocConfig } from './project';
 import { docsHtml, type DocsProvider } from './ui';
 
@@ -88,7 +88,7 @@ export function autodocMiddleware(options: DocsMiddlewareOptions = {}) {
       rest = rawPath.slice(base.length);
     }
     const sub = (rest.replace(/\/+$/, '') || '/') as string;
-    const known = sub === '/' || sub === '/openapi.json' || sub === '/coverage.json' || sub in PAGES;
+    const known = sub === '/' || sub === '/openapi.json' || sub === '/openapi.yaml' || sub === '/coverage.json' || sub in PAGES;
     if (!known) return next();
 
     const send = (status: number, type: string, body: string): void => {
@@ -100,7 +100,8 @@ export function autodocMiddleware(options: DocsMiddlewareOptions = {}) {
 
     try {
       const { doc, coverage } = load();
-      if (sub === '/openapi.json') return send(200, 'application/json; charset=utf-8', JSON.stringify(doc));
+      if (sub === '/openapi.json') return send(200, 'application/json; charset=utf-8', serializeOpenApi(doc, 'json'));
+      if (sub === '/openapi.yaml') return send(200, 'application/yaml; charset=utf-8', serializeOpenApi(doc, 'yaml'));
       if (sub === '/coverage.json') {
         return coverage === undefined
           ? send(404, 'text/plain', 'Coverage is only available when the source is analyzed')

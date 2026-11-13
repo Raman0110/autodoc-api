@@ -1,6 +1,6 @@
 export { analyzeProject } from './analyze';
 export type { AnalyzeOptions, AnalysisResult } from './analyze';
-export { generateOpenApi, validateOpenApi, toOpenApiPath } from './openapi';
+export { generateOpenApi, serializeOpenApi, validateOpenApi, toOpenApiPath } from './openapi';
 export { coverageReport, computeCoverage } from './coverage';
 export { docsHtml } from './ui';
 export { docs } from './docs';

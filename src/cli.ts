@@ -4,7 +4,7 @@ import * as http from 'http';
 import * as path from 'path';
 import { analyzeProject, type AnalysisResult } from './analyze';
 import { coverageReport, type CoverageReport } from './coverage';
-import { generateOpenApi, validateOpenApi } from './openapi';
+import { generateOpenApi, serializeOpenApi, validateOpenApi } from './openapi';
 import { docsHtml, type DocsProvider } from './ui';
 
 const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
@@ -27,6 +27,7 @@ Usage
 
 Options
   --out <file>                  Output file (default ./openapi.json)
+  --format <name>               json | yaml (also inferred from --out extension)
   --port <n>                    Port for "serve" (default 4000)
   --provider <name>             scalar | swagger | redoc (default scalar)
   --tsconfig <file>             Use a specific tsconfig.json
@@ -46,7 +47,7 @@ function parseArgs(argv: string[]): Args {
   const commands = new Set(['scan', 'generate', 'serve', 'check', 'help']);
   const flags: Record<string, string | boolean> = {};
   const positional: string[] = [];
-  const valueFlags = new Set(['out', 'port', 'provider', 'tsconfig', 'min-coverage']);
+  const valueFlags = new Set(['out', 'format', 'port', 'provider', 'tsconfig', 'min-coverage']);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '-h') flags.help = true;
@@ -147,6 +148,19 @@ function tryBuild(args: Args): ReturnType<typeof build> {
   }
 }
 
+function outputOptions(args: Args): { file: string; format: 'json' | 'yaml' } {
+  const requested = args.flags.format as string | undefined;
+  if (requested && requested !== 'json' && requested !== 'yaml' && requested !== 'yml') {
+    throw new Error(`Unknown output format "${requested}" (use json or yaml)`);
+  }
+  const named = args.flags.out as string | undefined;
+  const extension = named ? path.extname(named).toLowerCase() : '';
+  const format: 'json' | 'yaml' = requested
+    ? requested === 'json' ? 'json' : 'yaml'
+    : extension === '.yaml' || extension === '.yml' ? 'yaml' : 'json';
+  return { file: path.resolve(named || `openapi.${format === 'yaml' ? 'yaml' : 'json'}`), format };
+}
+
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
   if (args.command === 'help') {
@@ -167,10 +181,17 @@ function main(): void {
     for (const e of errors) console.log('  ' + red('✗') + ' ' + e);
     console.log('');
   } else if (res.model.endpoints.length) {
-    console.log(green('✓') + ' OpenAPI 3.1 document is structurally valid\n');
+    console.log(green('✓') + ' OpenAPI 3.1 document is valid\n');
   }
 
-  const outFile = path.resolve((args.flags.out as string) || 'openapi.json');
+  let output: ReturnType<typeof outputOptions>;
+  try {
+    output = outputOptions(args);
+  } catch (e) {
+    console.error(red('autodoc: ') + (e as Error).message);
+    process.exit(2);
+    return;
+  }
   switch (args.command) {
     case 'scan':
       return;
@@ -184,16 +205,16 @@ function main(): void {
       break;
     }
     case 'serve':
-      serve(args, outFile);
+      serve(args);
       return;
     default:
-      fs.writeFileSync(outFile, JSON.stringify(doc, null, 2) + '\n');
-      console.log(`Generated:\n\n  ${rel(outFile)}\n`);
+      fs.writeFileSync(output.file, serializeOpenApi(doc, output.format));
+      console.log(`Generated:\n\n  ${rel(output.file)}\n`);
       console.log(`Start documentation:\n\n  npx autodoc serve ${args.dir}\n`);
   }
 }
 
-function serve(args: Args, _outFile: string): void {
+function serve(args: Args): void {
   const port = Number(args.flags.port ?? 4000);
   const provider = ((args.flags.provider as string) || undefined) as DocsProvider | undefined;
   let state = build(args);
@@ -203,7 +224,10 @@ function serve(args: Args, _outFile: string): void {
     const url = (req.url ?? '/').split('?')[0];
     if (url === '/openapi.json') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      res.end(JSON.stringify(state.doc));
+      res.end(serializeOpenApi(state.doc, 'json'));
+    } else if (url === '/openapi.yaml') {
+      res.writeHead(200, { 'content-type': 'application/yaml; charset=utf-8', 'cache-control': 'no-store' });
+      res.end(serializeOpenApi(state.doc, 'yaml'));
     } else if (url === '/docs' || url === '/docs/') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(docsHtml(providerOf(), '/openapi.json', String(state.doc.info?.title ?? 'API') + ' docs'));

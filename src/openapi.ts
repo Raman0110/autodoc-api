@@ -1,9 +1,17 @@
+import Ajv2020, { type ErrorObject } from 'ajv/dist/2020';
+import { stringify as stringifyYaml } from 'yaml';
 import { computeCoverage } from './coverage';
 import type { ApiEndpoint, ApiModel, ApiSchema } from './model';
 import type { AutoDocConfig } from './project';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type OpenApiDocument = Record<string, any>;
+
+// This package tracks the official OpenAPI schemas and intentionally leaves
+// embedded JSON Schema objects to their declared dialect.
+const openapiV31 = require('@seriousme/openapi-schema-validator/schemas/v3.1/schema.json');
+const ajv = new Ajv2020({ allErrors: true, strict: false, validateFormats: false });
+const schemaValidator = ajv.compile(openapiV31);
 
 export function toOpenApiPath(path: string): string {
   return path.replace(/:([A-Za-z0-9_]+)(?:\([^)]*\))?\??/g, '{$1}');
@@ -79,9 +87,23 @@ export function generateOpenApi(model: ApiModel, config: AutoDocConfig = {}, pkg
   return doc;
 }
 
-/** Structural validation of the generated document (not a full JSON-Schema validation). */
+/** Serialize an OpenAPI document as deterministic JSON or YAML. */
+export function serializeOpenApi(doc: OpenApiDocument, format: 'json' | 'yaml' = 'json'): string {
+  return format === 'yaml' ? stringifyYaml(doc, { lineWidth: 0 }) : JSON.stringify(doc, null, 2) + '\n';
+}
+
+function schemaError(error: ErrorObject): string {
+  let location = error.instancePath || '/';
+  if (error.keyword === 'required' && typeof error.params.missingProperty === 'string') {
+    location = `${location.replace(/\/$/, '')}/${error.params.missingProperty}`;
+  }
+  return `${location}: ${error.message ?? 'is invalid'}`;
+}
+
+/** Validate against the official OpenAPI 3.1 schema plus semantic checks. */
 export function validateOpenApi(doc: OpenApiDocument): string[] {
-  const errors: string[] = [];
+  const valid = schemaValidator(doc);
+  const errors: string[] = valid ? [] : (schemaValidator.errors ?? []).map(schemaError);
   if (doc.openapi !== '3.1.0') errors.push('openapi must be "3.1.0"');
   if (!doc.info?.title) errors.push('info.title is required');
   if (!doc.info?.version) errors.push('info.version is required');

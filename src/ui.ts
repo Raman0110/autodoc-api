@@ -16,6 +16,6 @@ export function docsHtml(provider: DocsProvider, specUrl: string, title = 'API D
     case 'scalar':
     default:
       return `${head}<style>body{margin:0}</style></head><body><script id="api-reference" data-url="${esc(specUrl)}"></script>
-<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script></body></html>`;
+<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.78.1"></script></body></html>`;
   }
 }

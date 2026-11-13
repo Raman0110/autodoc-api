@@ -36,6 +36,7 @@ test('middleware serves docs UIs and the spec under the mount path', async () =>
     const spec = JSON.parse((await get(port, '/api/docs/openapi.json')).body);
     assert.equal(spec.openapi, '3.1.0');
     assert.ok(spec.paths['/api/users']);
+    assert.match((await get(port, '/api/docs/openapi.yaml')).body, /^openapi: 3\.1\.0/m);
     assert.equal(JSON.parse((await get(port, '/api/docs/coverage.json')).body).overall > 50, true);
     assert.equal((await get(port, '/ping')).body, 'pong'); // other routes untouched
     assert.equal((await get(port, '/api/docs/nope')).status, 404);

@@ -39,6 +39,19 @@ test('scan writes nothing, generate writes the spec', () => {
   assert.equal(Object.keys(doc.paths).length, 3);
 });
 
+test('generate writes YAML by extension or --format', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const { parse } = require('yaml');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'autodoc-'));
+  const inferred = path.join(dir, 'openapi.yaml');
+  assert.equal(run('generate', example, '--out', inferred).status, 0);
+  assert.equal(parse(fs.readFileSync(inferred, 'utf8')).openapi, '3.1.0');
+  const explicit = path.join(dir, 'contract.txt');
+  assert.equal(run('generate', example, '--out', explicit, '--format', 'yaml').status, 0);
+  assert.equal(parse(fs.readFileSync(explicit, 'utf8')).openapi, '3.1.0');
+});
+
 test('missing directory is a clear error', () => {
   const r = run('./does-not-exist');
   assert.equal(r.status, 2);

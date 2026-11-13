@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { analyzeProject, generateOpenApi, validateOpenApi, coverageReport } = require('../dist');
+const { analyzeProject, generateOpenApi, serializeOpenApi, validateOpenApi, coverageReport } = require('../dist');
+const { parse: parseYaml } = require('yaml');
 
 const root = path.resolve(__dirname, '..');
 function run(dir) {
@@ -132,7 +133,19 @@ test('validateOpenApi catches broken documents', () => {
     openapi: '3.1.0', info: { title: 'x', version: '1' },
     paths: { '/a/{id}': { get: { operationId: 'a', responses: { 200: { description: 'ok', content: { 'application/json': { schema: { $ref: '#/components/schemas/Nope' } } } } } } } },
   });
-  assert.equal(errs.length, 2);
+  assert.ok(errs.some((e) => e.includes('Nope')));
+  assert.ok(errs.some((e) => e.includes('path parameter {id} not declared')));
+});
+
+test('validateOpenApi enforces the OpenAPI 3.1 schema', () => {
+  const errs = validateOpenApi({ openapi: '3.1.0', info: { title: 42, version: '1' }, paths: {} });
+  assert.ok(errs.some((e) => e.includes('/info/title') && e.includes('string')));
+});
+
+test('OpenAPI documents serialize as JSON and YAML', () => {
+  const { doc } = example();
+  assert.deepEqual(JSON.parse(serializeOpenApi(doc, 'json')), doc);
+  assert.deepEqual(parseYaml(serializeOpenApi(doc, 'yaml')), doc);
 });
 
 test('service fixture: body typed through the service call, cookie().json() chains', () => {
