@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T06:48:23.509Z",
+  "generatedAt": "2026-11-13T06:54:30.159Z",
   "autodocVersion": "0.3.1",
   "environment": {
     "node": "v22.12.0",
@@ -85,11 +85,11 @@
       "highConfidencePrecision": 0,
       "autodocCoverage": 81,
       "warnings": 0,
-      "medianMs": 1046,
+      "medianMs": 1033,
       "timingsMs": [
-        1784,
-        1046,
-        989
+        1789,
+        1033,
+        1025
       ]
     },
     {
@@ -125,11 +125,11 @@
       "highConfidencePrecision": null,
       "autodocCoverage": 50,
       "warnings": 14,
-      "medianMs": 531,
+      "medianMs": 507,
       "timingsMs": [
-        555,
-        511,
-        531
+        592,
+        507,
+        504
       ]
     },
     {
@@ -163,11 +163,11 @@
       "highConfidencePrecision": null,
       "autodocCoverage": 87,
       "warnings": 0,
-      "medianMs": 647,
+      "medianMs": 670,
       "timingsMs": [
-        706,
-        647,
-        627
+        724,
+        669,
+        670
       ]
     },
     {
@@ -187,11 +187,11 @@
       "highConfidencePrecision": null,
       "autodocCoverage": 61,
       "warnings": 17,
-      "medianMs": 1005,
+      "medianMs": 1017,
       "timingsMs": [
-        1029,
-        958,
-        1005
+        1060,
+        988,
+        1017
       ]
     },
     {
@@ -249,11 +249,11 @@
       "highConfidencePrecision": 0,
       "autodocCoverage": 67,
       "warnings": 18,
-      "medianMs": 535,
+      "medianMs": 547,
       "timingsMs": [
-        535,
-        506,
-        570
+        550,
+        547,
+        542
       ]
     }
   ]

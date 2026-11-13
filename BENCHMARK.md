@@ -1,4 +1,4 @@
-# AutoDoc real-world route benchmark
+# AutoDoc route-pattern compatibility benchmark
 
 This benchmark measures route discovery accuracy on five independent public
 Express/TypeScript repositories. Ground truth was manually established from
@@ -10,15 +10,23 @@ Aggregate recall: **25.7%**
 Aggregate precision: **25.7%**  
 High-confidence precision: **0%**
 
+## Scope limitation
+
+This is a compatibility corpus, not a scalability benchmark. The projects have
+between 6 and 24 routes (median 18), so these results test diverse mounting
+patterns but do not establish behavior on applications with hundreds of
+endpoints. Large-project performance and sampled accuracy must be reported in a
+separate suite rather than inferred from this table.
+
 ## Results
 
 | Project | Actual | Detected | Correct | Recall | Precision | High-confidence precision | AutoDoc coverage | Median |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| dahkenangnon-mongoose | 24 | 24 | 0 | 0% | 0% | 0% | 81% | 1046 ms |
-| diego-express | 7 | 7 | 0 | 0% | 0% | — | 50% | 531 ms |
-| samved-prisma | 6 | 6 | 0 | 0% | 0% | — | 87% | 647 ms |
-| thailoc-express | 19 | 19 | 19 | 100% | 100% | — | 61% | 1005 ms |
-| vincent-prisma | 18 | 18 | 0 | 0% | 0% | 0% | 67% | 535 ms |
+| dahkenangnon-mongoose | 24 | 24 | 0 | 0% | 0% | 0% | 81% | 1033 ms |
+| diego-express | 7 | 7 | 0 | 0% | 0% | — | 50% | 507 ms |
+| samved-prisma | 6 | 6 | 0 | 0% | 0% | — | 87% | 670 ms |
+| thailoc-express | 19 | 19 | 19 | 100% | 100% | — | 61% | 1017 ms |
+| vincent-prisma | 18 | 18 | 0 | 0% | 0% | 0% | 67% | 547 ms |
 
 AutoDoc coverage is shown only for comparison. It is an internal completeness
 score and is not used as an accuracy metric.

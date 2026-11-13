@@ -141,7 +141,7 @@ const failures = results.map((item) => {
   return `### ${item.name}\n\nMissed routes:\n\n${missed}\n\nIncorrectly rooted or extra routes:\n\n${extra}`;
 });
 
-const markdown = `# AutoDoc real-world route benchmark
+const markdown = `# AutoDoc route-pattern compatibility benchmark
 
 This benchmark measures route discovery accuracy on five independent public
 Express/TypeScript repositories. Ground truth was manually established from
@@ -152,6 +152,14 @@ Verified routes: **${totals.expectedRoutes}**
 Aggregate recall: **${totals.recall}%**  
 Aggregate precision: **${totals.precision}%**  
 High-confidence precision: **${totals.highConfidencePrecision}%**
+
+## Scope limitation
+
+This is a compatibility corpus, not a scalability benchmark. The projects have
+between 6 and 24 routes (median 18), so these results test diverse mounting
+patterns but do not establish behavior on applications with hundreds of
+endpoints. Large-project performance and sampled accuracy must be reported in a
+separate suite rather than inferred from this table.
 
 ## Results
 

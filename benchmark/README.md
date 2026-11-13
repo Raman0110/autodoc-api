@@ -1,7 +1,12 @@
-# Real-world benchmark
+# Route-pattern compatibility benchmark
 
 The benchmark compares AutoDoc against manually audited route ground truth from
 five independent Express/TypeScript repositories.
+
+The corpus intentionally makes complete manual ground truth practical, but its
+projects contain only 6–24 routes. It measures compatibility, not large-project
+scalability. A separate scale suite is required for applications with hundreds
+of endpoints.
 
 ## Reproduce
 
