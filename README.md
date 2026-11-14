@@ -3,12 +3,43 @@
 [![npm](https://img.shields.io/npm/v/autodoc-api.svg)](https://www.npmjs.com/package/autodoc-api)
 [![license](https://img.shields.io/npm/l/autodoc-api.svg)](LICENSE)
 [![CI](https://github.com/Raman0110/autodoc-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Raman0110/autodoc-api/actions/workflows/ci.yml)
+[![Route benchmark: 74/74](https://img.shields.io/badge/route%20benchmark-74%2F74-brightgreen)](https://github.com/Raman0110/autodoc-api/blob/main/BENCHMARK.md)
+[![Directus sample: 30/30](https://img.shields.io/badge/Directus%20sample-30%2F30-brightgreen)](https://github.com/Raman0110/autodoc-api/blob/main/SCALE_BENCHMARK.md)
 
 **Zero-annotation OpenAPI 3.1 docs for existing Express + TypeScript APIs.**
 
 ![AutoDoc CLI generating and checking an API contract](https://raw.githubusercontent.com/Raman0110/autodoc-api/main/docs/demo.gif)
 
 autodoc-api reads the code you already wrote (routes, controllers, TypeScript types, Zod schemas, middleware) and generates an `openapi.json` plus interactive docs (Scalar, Swagger UI, ReDoc). No decorators, no Swagger comments, no duplicated schemas.
+
+## Tested on real-world Express applications
+
+AutoDoc is benchmarked against pinned versions of public Express and TypeScript
+projects—not only purpose-built examples.
+
+| Benchmark | Result |
+| --- | ---: |
+| Audited route-pattern corpus | 74/74 method + mounted-path pairs correct |
+| Compatibility recall / precision | 100% / 100% |
+| Directus source tree | 844 files scanned, 272 routes detected |
+| Source-verified Directus recall sample | 30/30 routes recovered |
+| Directus scan time | 3.3 seconds on the recorded Node.js 22 run |
+
+The 100% result applies only to the audited 74-route compatibility corpus. The
+Directus result is a recall sample, not a claim of whole-project accuracy or
+precision. Unsupported patterns are reported too: AutoDoc currently does not
+recognize Unleash's custom `this.route({...})` abstraction.
+
+[Compatibility report](https://github.com/Raman0110/autodoc-api/blob/main/BENCHMARK.md)
+· [Large-project report](https://github.com/Raman0110/autodoc-api/blob/main/SCALE_BENCHMARK.md)
+· [Pinned projects and samples](https://github.com/Raman0110/autodoc-api/blob/main/benchmark/scale-projects.json)
+
+Reproduce both suites:
+
+```bash
+npm run benchmark:setup && npm run benchmark
+npm run benchmark:scale:setup && npm run benchmark:scale
+```
 
 ## Install
 
